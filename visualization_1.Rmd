@@ -9,22 +9,149 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+library(tidyverse)
+library(ggridges)       #????????what is this package for
 ```
 
-## Including Plots
+Here is a illustration of rnoaa
+```{r}
+library(rnoaa)
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+weather_df = 
+  rnoaa::meteo_pull_monitors(c("USW00094728", "USC00519397", "USS0023B17S"),
+                      var = c("PRCP", "TMIN", "TMAX"), 
+                      date_min = "2017-01-01",
+                      date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY", 
+                      USC00519397 = "Waikiki_HA",
+                      USS0023B17S = "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+weather_df
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## start making plots
+
+```{r}
+ggplot(weather_df, aes(x = tmin, y = tmax))
+```
+
+scatterplot
+
+```{r}
+ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point()
+```
+
+```{r}
+weather_df %>%
+  filter(name == "CentralPark_NY") %>%
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_point()
+```
+
+## More plot options
+
+Add an aesthetic
+
+```{r}
+ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name))
+```
+
+add a geom
+
+```{r}
+ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name)) +
+  geom_smooth(se = FALSE)    # se represent of standard error, I guess.
+```
+
+add some options ...
+
+add a geom
+
+```{r}
+ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = 0.4) +    # make points more transperancy 
+  geom_smooth(se = FALSE)    # se represent of standard error, I guess.
+```
+
+changing the place of "color"
+
+```{r}
+ggplot(weather_df, aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = 0.4) +    # make points more transperancy 
+  geom_smooth(se = FALSE)    # se represent of standard error, I guess.
+```
+
+facetting...
+
+```{r}
+ggplot(weather_df, aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = 0.4) +    # make points more transperancy 
+  geom_smooth(se = FALSE) +   # se represent of standard error, I guess.
+  facet_grid( ~ name)      # seperate to three pictures 
+```
+
+a more interesting plot
+
+```{r}
+ggplot(weather_df, aes(x = date, y = tmax, color = name)) + 
+  geom_smooth(se = FALSE) 
+```
+
+```{r}
+ggplot(weather_df, aes(x = date, y = tmax, color = name, color = name, size = prcp)) +
+  geom_point() +
+  geom_smooth(se = FALSE) + 
+  facet_grid( ~ name)
+```
+
+something interesting
+
+```{r}
+ggplot(weather_df) + geom_point(aes(x = tmax, y = tmin), color = "blue")
+ggplot(weather_df) + geom_point(aes(x = tmax, y = tmin, color = "blue"))  # ggplot will find a variable name "blue", but it is not exist, so ggplot will create a variable name "blue", but might not be a blue one.
+```
+
+hist
+
+```{r}
+ggplot(weather_df, aes(x = tmax, fill = name)) + 
+  geom_histogram()
+```
+
+not easy to read so turn to density function
+
+```{r}
+ggplot(weather_df, aes(x = tmax, fill = name)) + 
+  geom_density(alpha = .4, adjust = .5) 
+```
+
+test of adjust
+
+```{r}
+ggplot(weather_df, aes(x = tmax, fill = name)) + 
+  geom_density(alpha = .4)   # without adjust the curve become more smooth
+```
+
+boxplot
+
+```{r}
+ggplot(weather_df, aes(x = name, y = tmax)) + 
+  geom_boxplot()
+```
+
+```{r}
+ggplot(weather_df, aes(x = name, y = tmax)) + 
+  geom_violin()
+```
+
+saving the plot
+
+
+
