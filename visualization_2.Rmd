@@ -252,3 +252,84 @@ ggplot(waikiki_df, aes(x = date, y = tmax, color = name)) +
 
 ## patchwork
 
+patchwork help us to combind different plots
+
+```{r}
+ggplot(weather_df, aes(x = date, y = tmax, color = names)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+    facet_grid(~ name) +
+  labs(
+    title = "Temperature vs date",
+    x = "Date",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package"
+  ) + 
+  viridis::scale_color_viridis(
+    name = "Location", 
+    discrete = TRUE
+  ) +
+    theme_bw() +
+    theme(legend.position = "bottom")
+```
+
+
+```{r}
+library(patchwork)
+
+tmax_tmin_p = ggplot(weather_df, aes(x = tmax, y = tmin, color = name)) + 
+  geom_point(alpha = .5) +
+  theme(legend.position = "none")
+
+prcp_dens_p = weather_df %>% 
+  filter(prcp > 0) %>% 
+  ggplot(aes(x = prcp, fill = name)) + 
+  geom_density(alpha = .5) + 
+  theme(legend.position = "none")
+
+tmax_date_p = ggplot(weather_df, aes(x = date, y = tmax, color = name)) + 
+  geom_point(alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  theme(legend.position = "bottom")
+
+tmax_tmin_p + tmax_date_p
+```
+
+```{r}
+(tmax_tmin_p + tmax_date_p) / tmax_date_p
+```
+
+## Data manipulation
+
+factors ...
+
+```{r}
+ggplot(weather_df, aes(x = name, y = tmax, fill = name)) +
+  geom_violin(alpha = .5)
+```
+
+```{r}
+weather_df %>%
+  mutate(name = forcats::fct_relevel(name, c("Waikiki_HA", "CentralPark_NY", "Waterhole_WA"))) %>%   # change the order of name
+  ggplot(aes(x = name, y = tmax)) + 
+  geom_violin(aes(fill = name), color = "blue", alpha = .5) + 
+  theme(legend.position = "bottom")
+```
+
+```{r}
+weather_df %>%
+  mutate(name = forcats::fct_reorder(name, tmax)) %>%   # change the order of name based on the tmax
+  ggplot(aes(x = name, y = tmax)) + 
+  geom_violin(aes(fill = name), color = "blue", alpha = .5) + 
+  theme(legend.position = "bottom")
+```
+
+```{r}
+weather_df %>%            # ?????? is there any other possible ways like add two density plots?
+  select(name, tmax, tmin) %>% 
+  gather(key = observation, value = temp, tmax:tmin) %>% 
+  ggplot(aes(x = temp, fill = observation)) +
+  geom_density(alpha = .5) + 
+  facet_grid(~name) + 
+  viridis::scale_fill_viridis(discrete = TRUE)
+```
+
