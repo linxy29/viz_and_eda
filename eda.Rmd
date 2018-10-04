@@ -1,0 +1,183 @@
+---
+title: "visualization_1"
+author: "Xinyi Lin"
+date: "9/27/2018"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set()
+```
+
+
+```{r}
+library(tidyverse)
+library(ggridges)       #????????what is this package for
+```
+
+Load rnoaa dataset
+```{r}
+library(rnoaa)
+
+weather_df = 
+  rnoaa::meteo_pull_monitors(c("USW00094728", "USC00519397", "USS0023B17S"),
+                      var = c("PRCP", "TMIN", "TMAX"), 
+                      date_min = "2016-01-01",
+                      date_max = "2016-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY", 
+                      USC00519397 = "Waikiki_HA",
+                      USS0023B17S = "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10,
+    month = lubridate::floor_date(date, unit = "month")) %>%
+  select(name, id, date, month, everything())
+```
+
+## Start grouping
+
+```{r}
+weather_df %>% 
+  group_by(name, month)
+```
+
+```{r}
+weather_df %>% 
+  ungroup()
+```
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(number = n())
+
+weather_df %>% 
+  count(name, month)
+```
+
+## Group summaries
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(number = n(),
+            num_na = sum(is.na(tmax)),
+            mean_tmax = mean(tmax))
+
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(number = n(),
+            mean_tmax = mean(tmax, na.rm = TRUE),
+            median_prcp = median(prcp, na.rm = TRUE),
+            sd_tmin = sd(tmin, na.rm = TRUE)) 
+```
+
+this is still a tibble
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(number = n(),
+            mean_tmax = mean(tmax, na.rm = TRUE),
+            median_prcp = median(prcp, na.rm = TRUE),
+            sd_tmin = sd(tmin, na.rm = TRUE)) %>% 
+  ggplot(aes(x = month, y = mean_tmax, color = name)) +
+  geom_point()
+```
+
+plot using two dataset
+
+```{r}
+month_df = weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(number = n(),
+            mean_tmax = mean(tmax, na.rm = TRUE),
+            median_prcp = median(prcp, na.rm = TRUE),
+            sd_tmin = sd(tmin, na.rm = TRUE))
+
+#####ggplot(weather_df, aes(x = data, y = tmax))    
+```
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE)) %>% 
+  spread(key = month, value = mean_tmax) %>%     # in order to read easier
+  knitr::kable(digits = 3)       # design table
+```
+
+## Group mutate
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  mutate(mean_tmax = mean(tmax, na.rm = TRUE))
+```
+
+special example
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(mean_tmax = mean(tmax, na.rm = TRUE),    # create to get centered_tmax
+         centered_tmax = tmax - mean_tmax) %>% 
+  ggplot(aes(x = date, y = centered_tmax, color = name)) + 
+    geom_point() 
+```
+
+## Window functions
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  mutate(tmax_rank = min_rank(tmax)) %>% 
+  filter(tmax_rank < 2)
+
+weather_df %>% 
+  group_by(name, month) %>% 
+  mutate(tmax_rank = min_rank(desc(tmax))) %>% 
+  filter(tmax_rank < 2)
+```
+
+use lags
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(lag_tmax = lag(tmax))    # show the previous values, but you need to order the dataset first, as it is gourped, the first member of every group will be NA
+```
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(lag_tmax = lag(tmax),
+         one_day_change = tmax - lag_tmax)    
+
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(lag_tmax = lag(tmax),
+         one_day_change = tmax - lag_tmax) %>% 
+  summarize(sd_one_day_change = sd(one_day_change, na.rm = TRUE))
+
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(one_day_change = tmax - lag(tmax)) %>%    # more simple way to write
+  summarize(sd_one_day_change = sd(one_day_change, na.rm = TRUE))
+```
+
+
+
+
+
+
+

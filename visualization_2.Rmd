@@ -324,7 +324,7 @@ weather_df %>%
 ```
 
 ```{r}
-weather_df %>%            # ?????? is there any other possible ways like add two density plots?
+weather_df %>%            # ?????? is there any other possible ways like add two density plots? seems no as the x need to mention in ggplot function, which forbid two x.
   select(name, tmax, tmin) %>% 
   gather(key = observation, value = temp, tmax:tmin) %>% 
   ggplot(aes(x = temp, fill = observation)) +
@@ -332,4 +332,6 @@ weather_df %>%            # ?????? is there any other possible ways like add two
   facet_grid(~name) + 
   viridis::scale_fill_viridis(discrete = TRUE)
 ```
+
+
 
