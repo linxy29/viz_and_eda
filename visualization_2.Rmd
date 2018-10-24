@@ -329,6 +329,7 @@ weather_df %>%            # ?????? is there any other possible ways like add two
   gather(key = observation, value = temp, tmax:tmin) %>% 
   ggplot(aes(x = temp, fill = observation)) +
   geom_density(alpha = .5) + 
+  geom_rug() +             # help to interpret geom_density
   facet_grid(~name) + 
   viridis::scale_fill_viridis(discrete = TRUE)
 ```

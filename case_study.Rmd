@@ -1,0 +1,73 @@
+---
+title: "case_study"
+author: "Xinyi Lin"
+date: "10/9/2018"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(ggridges)
+```
+
+```{r}
+library(p8105.datasets)
+data(nyc_airbnb)
+
+nyc_airbnb
+```
+
+```{r}
+nyc_airbnb = 
+  nyc_airbnb %>% 
+  mutate(stars = review_scores_location / 2) %>% 
+  rename(boro = neighbourhood_group)
+```
+
+```{r}
+nyc_airbnb %>% 
+  count(boro)
+
+nyc_airbnb %>% 
+  count(boro, neighbourhood)
+```
+
+## Question:
+
+* Does rating vary by neighborhood, room type or both ?
+* How is price related to other variables ?
+* What are rentals located ?
+
+* What's the most expensive area ? What about the least ?
+* Which listings have the most unfilled days ?
+* Which area has the highest density of listings ?
+* What are some host characteristics ? How many listings ? What's associated with ratings ?
+
+## Answer
+
+Question 1
+
+```{r}
+nyc_airbnb %>% 
+  group_by(boro, neighbourhood) %>% 
+  summarise(median_star = median(stars), na.rm = TRUE) %>% 
+  spread(key = neighbourhood, value = median_star, )
+```
+
+
+```{r}
+nyc_airbnb %>% 
+  group_by(boro, neighbourhood) %>% 
+  summarise(mean_price = mean(price, na.rm = TRUE))
+```
+
+Question 3
+
+```{r}
+nyc_airbnb %>% 
+  ggplot(aes(x = longitude, y = latitude, color = boro)) +
+  geom_point() +
+  viridis::scale_color_viridis(discrete = TRUE)
+```
+
+choropleth can be draw through ggplot2

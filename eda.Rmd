@@ -63,6 +63,10 @@ weather_df %>%
 
 weather_df %>% 
   count(name, month)
+
+weather_df %>% 
+  pull(name) %>% 
+  table()
 ```
 
 ## Group summaries
